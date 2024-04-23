@@ -67,3 +67,71 @@ CREATE TABLE Images (
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (postId) REFERENCES Posts(id)
 );
+
+
+CREATE TABLE Badges (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    imageUrl VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE SavedPosts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    userId INT NOT NULL,
+    postId INT NOT NULL,
+    FOREIGN KEY (userId) REFERENCES Users(id),
+    FOREIGN KEY (postId) REFERENCES Posts(id)
+);
+
+-- Datos de Usuarios
+INSERT INTO Users (username, email, image, badge) VALUES
+    ('john_doe', 'john@example.com', 'profile1.jpg', 'Beginner'),
+    ('alice_smith', 'alice@example.com', 'profile2.jpg', 'Pro'),
+    ('sam_jones', 'sam@example.com', 'profile3.jpg', 'Intermediate');
+
+-- Datos de Publicaciones (Posts)
+INSERT INTO Posts (title, content, image, userId, likes) VALUES
+    ('Mi primer post', '¡Hola mundo!', 'post1.jpg', 1, 10),
+    ('Ideas de proyectos', 'Compartiendo algunas ideas geniales...', 'post2.jpg', 2, 15),
+    ('Evento próximo', 'No se lo pierdan, será increíble.', 'post3.jpg', 3, 5);
+
+-- Datos de Comentarios (Comments)
+INSERT INTO Comments (content, userId, postId) VALUES
+    ('¡Gran inicio!', 1, 1),
+    ('Me encantan estas ideas.', 2, 2),
+    ('No puedo esperar para asistir.', 3, 3);
+
+-- Datos de Proyectos (Projects)
+INSERT INTO Projects (name, description, userId) VALUES
+    ('Proyecto A', 'Un proyecto emocionante en desarrollo.', 1),
+    ('Proyecto B', 'Investigando nuevas tecnologías.', 2),
+    ('Proyecto C', 'Colaboración abierta, ¡únete!', 3);
+
+-- Datos de Likes (Likes)
+INSERT INTO Likes (userId, postId) VALUES
+    (1, 2),
+    (2, 1),
+    (3, 3),
+    (1, 3);
+
+-- Datos de Imágenes (Images)
+INSERT INTO Images (imageUrl, postId) VALUES
+    ('image1.jpg', 1),
+    ('image2.jpg', 2),
+    ('image3.jpg', 3);
+
+-- Datos de Insignias (Badges)
+INSERT INTO Badges (name, description, imageUrl) VALUES
+    ('Principiante', 'Usuario nuevo en la plataforma.', 'badge1.jpg'),
+    ('Experto', 'Usuario con experiencia destacada.', 'badge2.jpg'),
+    ('Colaborador', 'Contribuidor activo en la comunidad.', 'badge3.jpg');
+
+-- Datos de Posts Guardados (SavedPosts)
+INSERT INTO SavedPosts (userId, postId) VALUES
+    (1, 2),
+    (2, 3),
+    (3, 1);
