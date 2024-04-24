@@ -2,10 +2,12 @@ const express = require('express')
 const app = express();
 const db = require('./db/connection.js');
 const bodyParser = require('body-parser')
+const cors = require('cors');
 require('dotenv').config();
 app.use(bodyParser.urlencoded({ extended: false }))
 
 // parse application/json
+app.use(cors());
 app.use(bodyParser.json())
 app.get('/check-db-connection', async (req, res) => {
   try {
