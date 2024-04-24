@@ -2,29 +2,95 @@ const express = require("express");
 const router = express.Router();
 const db = require("../../db/connection.js");
 
-// Ruta para obtener un post por id
-router.get("/post/:postId", (req, res) => {
+
+router.get("/:postId", (req, res) => {
   const postId = req.params.postId;
   const userId = req.query.userId; // Obtener userId de la consulta URL
-  const sql = `
+
+  // Consulta para obtener el post y verificar la interacción del usuario
+  const postSql = `
     SELECT p.*, 
+           u.id AS userId,
+           u.username,
+           u.badge,
            (CASE WHEN sp.userId IS NOT NULL THEN true ELSE false END) AS saved,
            (CASE WHEN l.userId IS NOT NULL THEN true ELSE false END) AS liked
     FROM Posts p
+    INNER JOIN Users u ON p.userId = u.id
     LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
     LEFT JOIN Likes l ON p.id = l.postId AND l.userId = ?
     WHERE p.id = ?`;
-  db.query(sql, [userId, userId, postId], (err, result) => {
+
+  // Consulta para obtener los comentarios asociados al post con detalles del usuario
+  const commentsSql = `
+    SELECT c.*, 
+           u.id AS userId,
+           u.username,
+           u.badge
+    FROM Comments c
+    INNER JOIN Users u ON c.userId = u.id
+    WHERE c.postId = ?`;
+
+  // Ejecutar ambas consultas en paralelo
+  db.query(postSql, [userId, userId, postId], (err, postResult) => {
     if (err) {
       console.error("Error al obtener el post por ID:", err);
       res.status(500).send("Error al obtener el post por ID");
-    } else {
-      if (result.length > 0) {
-        res.json(result[0]);
-      } else {
-        res.status(404).send("Post no encontrado");
-      }
+      return;
     }
+
+    if (postResult.length === 0) {
+      res.status(404).send("Post no encontrado");
+      return;
+    }
+
+    const post = postResult[0]; // Obtener el post del resultado
+
+    // Ejecutar la consulta de comentarios
+    db.query(commentsSql, [postId], (err, commentsResult) => {
+      if (err) {
+        console.error("Error al obtener los comentarios del post:", err);
+        res.status(500).send("Error al obtener los comentarios del post");
+        return;
+      }
+
+      // Mapear los comentarios al formato deseado con el usuario representado
+      const comentarios = commentsResult.map(comment => ({
+        _id: comment.id.toString(),
+        content: comment.content,
+        user: {
+          id: comment.userId.toString(),
+          username: comment.username,
+          badge: comment.badge
+        },
+        postId: comment.postId.toString(),
+        createdAt: comment.createdAt.toISOString(),
+        updatedAt: comment.updatedAt.toISOString()
+      }));
+
+      // Obtener el usuario del post
+      const user = {
+        id: post.userId.toString(),
+        username: post.username,
+        badge: post.badge
+      };
+
+      // Construir el objeto de respuesta con el post, usuario y comentarios
+      const response = {
+        post: {
+          ...post,
+          user, // Agregar el usuario al post
+          id: post.id.toString(), // Convertir ID a string si es necesario
+          createdAt: post.createdAt.toISOString(),
+          updatedAt: post.updatedAt.toISOString(),
+          liked: post.liked === 1,
+          saved: post.saved === 1
+        },
+        comments: comentarios // Array de comentarios en el formato deseado
+      };
+
+      res.json(response);
+    });
   });
 });
 
