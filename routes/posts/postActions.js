@@ -18,8 +18,8 @@ router.post("/:postId/save", (req, res) => {
     });
   });
   
-  router.delete("/:postId/save", (req, res) => {
-      const userId = req.body.userId;
+  router.delete("/:postId/save/", (req, res) => {
+      const userId = req.query.userId;
       const postId = req.params.postId;
       const sql = "DELETE FROM Likes WHERE userId = ? AND postId = ?";
       db.query(sql, [userId, postId], (err, result) => {
@@ -50,8 +50,8 @@ router.post("/:postId/save", (req, res) => {
   
 // Ruta para deslikear un post por un usuario
 router.delete("/:postId/like", (req, res) => {
-    const userId = req.body.userId;
-    const postId = req.params.postId;
+  const userId = req.query.userId;
+  const postId = req.params.postId;
     const sql = "DELETE FROM Likes WHERE userId = ? AND postId = ?";
     db.query(sql, [userId, postId], (err, result) => {
       if (err) {

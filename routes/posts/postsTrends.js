@@ -53,7 +53,7 @@ router.get("/popular", (req, res) => {
         content: post.content,
         image: post.image || null,
         user: {
-          id: post.userId.toString(),
+          id: post.userId.toString(), 
           username: post.username,
           badge: post.badge
         },
