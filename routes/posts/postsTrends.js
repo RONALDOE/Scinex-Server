@@ -51,7 +51,7 @@ router.get("/category/:category", (req, res) => {
       } else {
         // Transformar los resultados al formato deseado (IPost)
         const formattedResults = results.map((post) => ({
-          _id: post.id.toString(),
+          id: post.id.toString(),
           title: post.title,
           content: post.content,
           image: post.image || null,

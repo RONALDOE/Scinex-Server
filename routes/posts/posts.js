@@ -56,7 +56,7 @@ router.get("/:postId", (req, res) => {
 
       // Mapear los comentarios al formato deseado con el usuario representado
       const comentarios = commentsResult.map(comment => ({
-        _id: comment.id.toString(),
+        id: comment.id.toString(),
         content: comment.content,
         user: {
           id: comment.userId.toString(),
@@ -148,6 +148,7 @@ router.post("/", (req, res) => {
       console.error("Error al crear un nuevo post:", err);
       res.status(500).send("Error al crear un nuevo post");
     } else {
+      console.log("Post creado correctamente"); 
       res.status(201).send("Post creado correctamente");
     }
   });
