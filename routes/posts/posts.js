@@ -136,6 +136,49 @@ router.get("/:type/:id/posts", (req, res) => {
   });
 });
 
+router.get("/:type/:id/posts/recent", (req, res) => {
+  const { type, id } = req.params;
+  let sql;
+
+  if (type === "user") {
+    // Búsqueda por usuario
+    sql = `
+      SELECT p.*, 
+             (CASE WHEN sp.userId IS NOT NULL THEN true ELSE false END) AS saved,
+             (CASE WHEN l.userId IS NOT NULL THEN true ELSE false END) AS liked
+      FROM Posts p
+      LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
+      LEFT JOIN Likes l ON p.id = l.postId AND l.userId = ?
+      WHERE p.userId = ?
+      ORDER BY p.createdAt DESC
+      LIMIT 5`; // Limitar a los 5 más recientes
+  } else if (type === "project") {
+    // Búsqueda por proyecto (asumiendo que hay una relación userId en la tabla Projects)
+    sql = `
+      SELECT p.*, 
+             (CASE WHEN sp.userId IS NOT NULL THEN true ELSE false END) AS saved,
+             (CASE WHEN l.userId IS NOT NULL THEN true ELSE false END) AS liked
+      FROM Posts p
+      LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
+      LEFT JOIN Likes l ON p.id = l.postId AND l.userId = ?
+      WHERE p.userId IN (SELECT userId FROM Projects WHERE id = ?)
+      ORDER BY p.createdAt DESC
+      LIMIT 5`; // Limitar a los 5 más recientes
+  } else {
+    return res.status(400).send("Tipo de búsqueda no válido");
+  }
+
+  db.query(sql, [id, id, id], (err, results) => {
+    if (err) {
+      console.error("Error al obtener los posts:", err);
+      res.status(500).send("Error al obtener los posts");
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+
 
 
 // Ruta para crear un nuevo post
