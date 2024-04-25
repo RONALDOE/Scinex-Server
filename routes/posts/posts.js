@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../../db/connection.js");
 
-
+// Ruta para obtener un post por su ID con comentarios
 router.get("/:postId", (req, res) => {
   const postId = req.params.postId;
   const userId = req.query.userId; // Obtener userId de la consulta URL
@@ -13,8 +13,8 @@ router.get("/:postId", (req, res) => {
            u.id AS userId,
            u.username,
            u.badge,
-           (CASE WHEN sp.userId IS NOT NULL THEN true ELSE false END) AS saved,
-           (CASE WHEN l.userId IS NOT NULL THEN true ELSE false END) AS liked
+           (l.userId IS NOT NULL) AS liked,
+           (sp.userId IS NOT NULL) AS saved
     FROM Posts p
     INNER JOIN Users u ON p.userId = u.id
     LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
@@ -78,13 +78,16 @@ router.get("/:postId", (req, res) => {
       // Construir el objeto de respuesta con el post, usuario y comentarios
       const response = {
         post: {
-          ...post,
-          user, // Agregar el usuario al post
-          id: post.id.toString(), // Convertir ID a string si es necesario
+          id: post.id.toString(),
+          title: post.title,
+          content: post.content,
+          image: post.image || null,
+          user,
+          likes: post.likes,
           createdAt: post.createdAt.toISOString(),
           updatedAt: post.updatedAt.toISOString(),
-          liked: post.liked === 1,
-          saved: post.saved === 1
+          liked: post.liked,
+          saved: post.saved
         },
         comments: comentarios // Array de comentarios en el formato deseado
       };
@@ -94,96 +97,148 @@ router.get("/:postId", (req, res) => {
   });
 });
 
-
 // Ruta para obtener todos los posts por usuario o proyecto
 router.get("/:type/:id/posts", (req, res) => {
   const { type, id } = req.params;
   let sql;
 
+  const userId = req.query.userId;
+
   if (type === "user") {
     // Búsqueda por usuario
     sql = `
       SELECT p.*, 
-             (CASE WHEN sp.userId IS NOT NULL THEN true ELSE false END) AS saved,
-             (CASE WHEN l.userId IS NOT NULL THEN true ELSE false END) AS liked
+             (sp.userId IS NOT NULL) AS saved,
+             (l.userId IS NOT NULL) AS liked,
+             u.id AS userId,
+             u.username,
+             u.badge
       FROM Posts p
       LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
       LEFT JOIN Likes l ON p.id = l.postId AND l.userId = ?
+      INNER JOIN Users u ON p.userId = u.id
       WHERE p.userId = ?
       ORDER BY p.createdAt DESC`;
   } else if (type === "project") {
     // Búsqueda por proyecto (asumiendo que hay una relación userId en la tabla Projects)
     sql = `
       SELECT p.*, 
-             (CASE WHEN sp.userId IS NOT NULL THEN true ELSE false END) AS saved,
-             (CASE WHEN l.userId IS NOT NULL THEN true ELSE false END) AS liked
+             (sp.userId IS NOT NULL) AS saved,
+             (l.userId IS NOT NULL) AS liked,
+             u.id AS userId,
+             u.username,
+             u.badge
       FROM Posts p
       LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
       LEFT JOIN Likes l ON p.id = l.postId AND l.userId = ?
+      INNER JOIN Users u ON p.userId = u.id
       WHERE p.userId IN (SELECT userId FROM Projects WHERE id = ?)
       ORDER BY p.createdAt DESC`;
   } else {
     return res.status(400).send("Tipo de búsqueda no válido");
   }
 
-  db.query(sql, [id, id, id], (err, results) => {
+  db.query(sql, [userId, userId, id], (err, results) => {
     if (err) {
       console.error("Error al obtener los posts:", err);
       res.status(500).send("Error al obtener los posts");
     } else {
-      res.json(results);
+      // Formatear resultados como en /popular
+      const formattedResults = results.map(post => ({
+        id: post.id.toString(),
+        title: post.title,
+        content: post.content,
+        image: post.image || null,
+        user: {
+          id: post.userId.toString(),
+          username: post.username,
+          badge: post.badge
+        },
+        likes: post.likes,
+        createdAt: post.createdAt.toISOString(),
+        updatedAt: post.updatedAt.toISOString(),
+        liked: post.liked,
+        saved: post.saved
+      }));
+
+      res.json(formattedResults);
     }
   });
 });
 
+// Ruta para obtener posts recientes por usuario o proyecto
 router.get("/:type/:id/posts/recent", (req, res) => {
   const { type, id } = req.params;
   let sql;
 
+  const userId = req.query.userId;
+
   if (type === "user") {
     // Búsqueda por usuario
     sql = `
       SELECT p.*, 
-             (CASE WHEN sp.userId IS NOT NULL THEN true ELSE false END) AS saved,
-             (CASE WHEN l.userId IS NOT NULL THEN true ELSE false END) AS liked
+             (sp.userId IS NOT NULL) AS saved,
+             (l.userId IS NOT NULL) AS liked,
+             u.id AS userId,
+             u.username,
+             u.badge
       FROM Posts p
       LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
       LEFT JOIN Likes l ON p.id = l.postId AND l.userId = ?
+      INNER JOIN Users u ON p.userId = u.id
       WHERE p.userId = ?
       ORDER BY p.createdAt DESC
-      LIMIT 5`; // Limitar a los 5 más recientes
+      LIMIT 5`;
   } else if (type === "project") {
     // Búsqueda por proyecto (asumiendo que hay una relación userId en la tabla Projects)
     sql = `
       SELECT p.*, 
-             (CASE WHEN sp.userId IS NOT NULL THEN true ELSE false END) AS saved,
-             (CASE WHEN l.userId IS NOT NULL THEN true ELSE false END) AS liked
+             (sp.userId IS NOT NULL) AS saved,
+             (l.userId IS NOT NULL) AS liked,
+             u.id AS userId,
+             u.username,
+             u.badge
       FROM Posts p
       LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
       LEFT JOIN Likes l ON p.id = l.postId AND l.userId = ?
+      INNER JOIN Users u ON p.userId = u.id
       WHERE p.userId IN (SELECT userId FROM Projects WHERE id = ?)
       ORDER BY p.createdAt DESC
-      LIMIT 5`; // Limitar a los 5 más recientes
+      LIMIT 5`;
   } else {
     return res.status(400).send("Tipo de búsqueda no válido");
   }
 
-  db.query(sql, [id, id, id], (err, results) => {
+  db.query(sql, [userId, userId, id], (err, results) => {
     if (err) {
       console.error("Error al obtener los posts:", err);
       res.status(500).send("Error al obtener los posts");
     } else {
-      res.json(results);
+      // Formatear resultados como en /popular
+      const formattedResults = results.map(post => ({
+        id: post.id.toString(),
+        title: post.title,
+        content: post.content,
+        image: post.image || null,
+        user: {
+          id: post.userId.toString(),
+          username: post.username,
+          badge: post.badge
+        },
+        likes: post.likes,
+        createdAt: post.createdAt.toISOString(),
+        updatedAt: post.updatedAt.toISOString(),
+        liked: post.liked,
+        saved: post.saved
+      }));
+
+      res.json(formattedResults);
     }
   });
 });
 
-
-
-
 // Ruta para crear un nuevo post
 router.post("/", (req, res) => {
-  console.log(req.body);
   const { title, content, image, userId } = req.body;
   const sql = "INSERT INTO Posts (title, content, image, userId) VALUES (?, ?, ?, ?)";
   db.query(sql, [title, content, image, userId], (err, result) => {

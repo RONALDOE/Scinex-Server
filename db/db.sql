@@ -87,6 +87,31 @@ CREATE TABLE SavedPosts (
     FOREIGN KEY (postId) REFERENCES Posts(id)
 );
 
+-- Tabla de Saludos o Mensajes de Usuarios
+CREATE TABLE Greetings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    userId INT NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES Users(id)
+);
+
+
+-- Tabla de Miembros (Relación entre Usuarios y Proyectos)
+CREATE TABLE Members (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    userId INT NOT NULL,
+    projectId INT NOT NULL,
+    role VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES Users(id),
+    FOREIGN KEY (projectId) REFERENCES Projects(id)
+);
+
+
 -- Datos de Usuarios
 INSERT INTO Users (username, email, image, badge) VALUES
     ('john_doe', 'john@example.com', 'profile1.jpg', 'Beginner'),
@@ -135,3 +160,19 @@ INSERT INTO SavedPosts (userId, postId) VALUES
     (1, 2),
     (2, 3),
     (3, 1);
+
+INSERT INTO Greetings (title, content, userId) VALUES
+    ('Hola', '¡Hola a todos!', 1),
+    ('Buenos días', 'Espero que tengan un buen día.', 2),
+    ('Saludos', '¡Saludos desde mi parte!', 3),
+    ('Mensaje de prueba', 'Este es un mensaje de prueba.', 2),
+    ('Bienvenidos', 'Bienvenidos a nuestra comunidad.', 1);
+
+
+-- Datos de Miembros (Members)
+INSERT INTO Members (userId, projectId, role) VALUES
+    (1, 1, 'Administrador'),
+    (2, 1, 'Miembro'),
+    (3, 2, 'Miembro'),
+    (1, 3, 'Colaborador'),
+    (2, 3, 'Colaborador');
