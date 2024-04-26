@@ -67,7 +67,6 @@ router.get("/category/:category", (req, res) => {
           saved: post.saved === 1,
         }));
         
-        console.log(results[0])
         res.json(formattedResults);
       }
     });

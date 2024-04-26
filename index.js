@@ -43,7 +43,7 @@ app.get('/check-db-connection', async (req, res) => {
 
 
 
-app.use('/users', require('./routes/user.js'));
+app.use('/user', require('./routes/user.js'));
 app.use('/comments', require('./routes/comment.js'));
 app.use('/project', require('./routes/project.js'));
 app.use('/greetings', require('./routes/greetings.js'));

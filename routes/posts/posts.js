@@ -13,8 +13,8 @@ router.get("/:postId", (req, res) => {
            u.id AS userId,
            u.username,
            u.badge,
-           (l.userId IS NOT NULL) AS liked,
-           (sp.userId IS NOT NULL) AS saved
+           IF(l.userId IS NOT NULL, true, false) AS saved,
+             IF(sp.userId IS NOT NULL, true, false) AS liked
     FROM Posts p
     INNER JOIN Users u ON p.userId = u.id
     LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
@@ -108,11 +108,12 @@ router.get("/:type/:id/posts", (req, res) => {
     // Búsqueda por usuario
     sql = `
       SELECT p.*, 
-             (sp.userId IS NOT NULL) AS saved,
-             (l.userId IS NOT NULL) AS liked,
+             (sp.userId IS NOT NULL) AS liked,
+             (l.userId IS NOT NULL) AS saved,
              u.id AS userId,
              u.username,
              u.badge
+             
       FROM Posts p
       LEFT JOIN SavedPosts sp ON p.id = sp.postId AND sp.userId = ?
       LEFT JOIN Likes l ON p.id = l.postId AND l.userId = ?
@@ -238,8 +239,9 @@ router.get("/:type/:id/posts/recent", (req, res) => {
 });
 
 // Ruta para crear un nuevo post
-router.post("/", (req, res) => {
-  const { title, content, image, userId } = req.body;
+router.post("/:userId", (req, res) => {
+  const { title, content, image } = req.body;
+  const userId = req.params.userId;
   const sql = "INSERT INTO Posts (title, content, image, userId) VALUES (?, ?, ?, ?)";
   db.query(sql, [title, content, image, userId], (err, result) => {
     if (err) {

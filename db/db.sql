@@ -88,16 +88,25 @@ CREATE TABLE SavedPosts (
 );
 
 -- Tabla de Saludos o Mensajes de Usuarios
-CREATE TABLE Greetings (
+CREATE TABLE UserGreetings (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    userId INT NOT NULL,
+    userId INT NOT NULL UNIQUE,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (userId) REFERENCES Users(id)
 );
 
+CREATE TABLE ProjectGreetings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    projectId INT NOT NULL UNIQUE,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (projectId) REFERENCES Projects(id)
+);
 
 -- Tabla de Miembros (Relación entre Usuarios y Proyectos)
 CREATE TABLE Members (
@@ -112,7 +121,7 @@ CREATE TABLE Members (
 );
 
 
--- Datos de Usuarios
+-- Datos de Usuarios    
 INSERT INTO Users (username, email, image, badge) VALUES
     ('john_doe', 'john@example.com', 'profile1.jpg', 'Beginner'),
     ('alice_smith', 'alice@example.com', 'profile2.jpg', 'Pro'),
@@ -161,13 +170,15 @@ INSERT INTO SavedPosts (userId, postId) VALUES
     (2, 3),
     (3, 1);
 
-INSERT INTO Greetings (title, content, userId) VALUES
+INSERT INTO UserGreetings (title, content, userId) VALUES
     ('Hola', '¡Hola a todos!', 1),
     ('Buenos días', 'Espero que tengan un buen día.', 2),
-    ('Saludos', '¡Saludos desde mi parte!', 3),
-    ('Mensaje de prueba', 'Este es un mensaje de prueba.', 2),
-    ('Bienvenidos', 'Bienvenidos a nuestra comunidad.', 1);
+    ('Saludos', '¡Saludos desde mi parte!', 3);
 
+INSERT INTO ProjectGreetings (title, content, projectId) VALUES
+    ('Hola', '¡Hola a todos!', 1),
+    ('Buenos días', 'Espero que tengan un buen día.', 2),
+    ('Saludos', '¡Saludos desde mi parte!', 3);
 
 -- Datos de Miembros (Members)
 INSERT INTO Members (userId, projectId, role) VALUES

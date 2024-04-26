@@ -3,10 +3,10 @@ const router = express.Router();
 const db = require("../db/connection.js");
 
 // Ruta para obtener todos los mensajes de saludo
-router.get("/:id", (req, res) => {
+router.get("/user/:id", (req, res) => {
     const greetingId = req.params.id;
 
-  const sql = "SELECT * FROM Greetings where userId = ?";
+  const sql = "SELECT * FROM UserGreetings where userId = ?";
   db.query(sql,greetingId ,(err, results) => {
     if (err) {
       console.error("Error al obtener los mensajes de saludo:", err);
@@ -17,10 +17,26 @@ router.get("/:id", (req, res) => {
   });
 });
 
+router.get("/project/:id", (req, res) => {
+  const greetingId = req.params.id;
+
+const sql = "SELECT * FROM ProjectGreetings where projectId = ?";
+db.query(sql,greetingId ,(err, results) => {
+  if (err) {
+    console.error("Error al obtener los mensajes de saludo:", err);
+    res.status(500).send("Error al obtener los mensajes de saludo");
+  } else {
+    res.json(results[0]);
+  }
+});
+});
+
 // Ruta para crear un nuevo mensaje de saludo
-router.post("/", (req, res) => {
-  const { title, content, userId } = req.body;
-  const sql = "INSERT INTO Greetings (title, content, userId) VALUES (?, ?, ?)";
+router.post("/user/:userId", (req, res) => {
+  const { title, content } = req.body;
+  const userId = req.params.userId;
+
+  const sql = "INSERT INTO UserGreetings (title, content, userId) VALUES (?, ?, ?)";
   db.query(sql, [title, content, userId], (err, result) => {
     if (err) {
       console.error("Error al crear un nuevo mensaje de saludo:", err);
@@ -30,6 +46,21 @@ router.post("/", (req, res) => {
     }
   });
 });
+
+router.post("/project/:projectId", (req, res) => {
+  const { title, content } = req.body;
+  const projectId = req.params.projectId;
+  const sql = "INSERT INTO ProjectGreetings (title, content, projectId) VALUES (?, ?, ?)";
+  db.query(sql, [title, content, userId, projectId], (err, result) => {
+    if (err) {
+      console.error("Error al crear un nuevo mensaje de saludo:", err);
+      res.status(500).send("Error al crear un nuevo mensaje de saludo");
+    } else {
+      res.status(201).send("Mensaje de saludo creado correctamente");
+    }
+  });
+});
+
 
 // Ruta para actualizar un mensaje de saludo por ID
 router.put("/:id", (req, res) => {
