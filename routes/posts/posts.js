@@ -178,8 +178,8 @@ router.get("/:type/:id/posts/recent", (req, res) => {
     // Búsqueda por usuario
     sql = `
       SELECT p.*, 
-             (sp.userId IS NOT NULL) AS saved,
-             (l.userId IS NOT NULL) AS liked,
+             (sp.userId IS NOT NULL) AS liked,
+             (l.userId IS NOT NULL) AS saved,
              u.id AS userId,
              u.username,
              u.badge

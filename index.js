@@ -42,7 +42,18 @@ app.get('/check-db-connection', async (req, res) => {
 
 
 
+app.get("/categories", (req, res) => {
+  const sql = "SELECT * FROM Categories";
 
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error al obtener las categorías:", err);
+      res.status(500).send("Error interno del servidor");
+    } else {
+      res.json(results);
+    }
+  });
+});
 app.use('/user', require('./routes/user.js'));
 app.use('/comments', require('./routes/comment.js'));
 app.use('/project', require('./routes/project.js'));
